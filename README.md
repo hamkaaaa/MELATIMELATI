@@ -57,7 +57,7 @@ Aplikasi ini mendukung simulasi alur kerja tiket lengkap dengan 4 peran (roles) 
 
 ---
 
-## 🚀 Cara Menjalankan Project Secara Lokal
+## 🚀  Cara Menjalankan Project Secara Lokal
 
 ### Prasyarat
 Pastikan Anda sudah menginstal **Node.js** pada sistem Anda.
