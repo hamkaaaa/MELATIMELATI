@@ -112,7 +112,8 @@ export default function UserDashboard() {
   // Submit Report Form
   const handleSubmitReport = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!kategori || !subLayanan || !detailLayanan || !detailMasalah.trim()) {
+    const needsLevel3 = detailLayananList.length > 0;
+    if (!kategori || !subLayanan || (needsLevel3 && !detailLayanan) || !detailMasalah.trim()) {
       alert("Semua kolom form wajib diisi.");
       return;
     }
@@ -439,8 +440,8 @@ export default function UserDashboard() {
                   </div>
                 )}
 
-                {/* Level 3 Selector (appears conditionally) */}
-                {subLayanan && (
+                {/* Level 3 Selector (appears conditionally if 3 levels exist) */}
+                {subLayanan && detailLayananList.length > 0 && (
                   <div className="animate-in slide-in-from-top-1.5 duration-200">
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                       Detail Layanan Spesifik (Level 3)

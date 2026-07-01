@@ -310,10 +310,14 @@ export default function ServiceChatbot({ onSelectRecommendation }: ServiceChatbo
                           <div className="text-[10px] text-gray-400 font-medium pt-1">Sub-Layanan Level 2</div>
                           <div className="text-xs font-semibold text-gray-700">{msg.recommendation.sub}</div>
 
-                          <div className="text-[10px] text-gray-400 font-medium pt-1">Detail Layanan Level 3</div>
-                          <div className="text-xs font-semibold text-gray-800 bg-slate-50 border border-slate-100 px-2 py-1 rounded-md font-mono">
-                            {msg.recommendation.service}
-                          </div>
+                          {msg.recommendation.service && (
+                            <>
+                              <div className="text-[10px] text-gray-400 font-medium pt-1">Detail Layanan Level 3</div>
+                              <div className="text-xs font-semibold text-gray-800 bg-slate-50 border border-slate-100 px-2 py-1 rounded-md font-mono">
+                                {msg.recommendation.service}
+                              </div>
+                            </>
+                          )}
                         </div>
 
                         <button

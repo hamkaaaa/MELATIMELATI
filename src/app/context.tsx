@@ -75,13 +75,24 @@ export const SUBBAG_MASTER: Record<string, string> = {
 };
 
 export const SUBBAGS: Record<string, { id: string; name: string }> = {
+  // Category level defaults
   "Layanan Identitas":                          { id: "k2", name: SUBBAG_MASTER.k2 },
   "Layanan Data":                               { id: "k6", name: SUBBAG_MASTER.k6 },
   "Layanan Aplikasi":                           { id: "k3", name: SUBBAG_MASTER.k3 },
   "Layanan Teknologi":                          { id: "k1", name: SUBBAG_MASTER.k1 },
   "Layanan Perangkat":                          { id: "k2", name: SUBBAG_MASTER.k2 },
   "Layanan Dukungan TI Untuk Kegiatan Khusus": { id: "k2", name: SUBBAG_MASTER.k2 },
-  "Layanan Informasi":                          { id: "k5", name: SUBBAG_MASTER.k5 },
+  "Layanan Informasi":                          { id: "k8", name: SUBBAG_MASTER.k8 },
+
+  // Sub-Layanan specific routing
+  "Layanan TTE":                                { id: "k7", name: SUBBAG_MASTER.k7 },
+  "Layanan Segel Elektronik":                   { id: "k7", name: SUBBAG_MASTER.k7 },
+  "Layanan MFA":                                { id: "k7", name: SUBBAG_MASTER.k7 },
+  "Layanan Sistem Layanan Data":                { id: "k5", name: SUBBAG_MASTER.k5 },
+  "Aplikasi Kelembagaan":                       { id: "k4", name: SUBBAG_MASTER.k4 },
+  "Aplikasi Pendukung":                         { id: "k4", name: SUBBAG_MASTER.k4 },
+  "Aplikasi Kolaborasi":                        { id: "k2", name: SUBBAG_MASTER.k2 },
+  "Layanan Survei":                             { id: "k2", name: SUBBAG_MASTER.k2 },
 };
 
 // Users definition
@@ -154,46 +165,23 @@ export const SERVICE_CATALOG: ServiceCatalogNode[] = [
     subs: [
       {
         name: "Layanan Akun",
-        items: [
-          "Pembuatan Akun Baru Portal BPK",
-          "Reset Password / Masalah Login",
-          "Perubahan Hak Akses Aplikasi",
-          "Penghapusan / Penonaktifan Akun Pegawai"
-        ]
+        items: []
       },
       {
         name: "Layanan TTE",
-        items: [
-          "Registrasi Sertifikat TTE Baru",
-          "Perpanjangan Masa Aktif TTE",
-          "Pencabutan Sertifikat TTE",
-          "Troubleshooting Tanda Tangan Elektronik Gagal"
-        ]
+        items: []
       },
       {
         name: "Layanan Segel Elektronik",
-        items: [
-          "Penerbitan Segel Baru Instansi",
-          "Perpanjangan Masa Aktif Segel",
-          "Masalah Verifikasi Segel Elektronik"
-        ]
+        items: []
       },
       {
         name: "Layanan Email",
-        items: [
-          "Pembuatan Email Baru @bpk.go.id",
-          "Reset Password Email Dinas",
-          "Masalah Kuota Email Penuh",
-          "Konfigurasi Mail Client (Outlook/Thunderbird/HP)"
-        ]
+        items: []
       },
       {
         name: "Layanan MFA",
-        items: [
-          "Registrasi Multi-Factor Authentication Baru",
-          "Reset Token MFA / Google Authenticator",
-          "Masalah Sinkronisasi Waktu MFA"
-        ]
+        items: []
       }
     ]
   },
@@ -203,21 +191,21 @@ export const SERVICE_CATALOG: ServiceCatalogNode[] = [
       {
         name: "Pengelolaan Data",
         items: [
-          "Perencanaan Data Pemeriksaan",
-          "Pengumpulan Data dari Entitas",
-          "Pengolahan Data Audit BPK",
-          "Penyimpanan Data di Gudang Data Pusat",
-          "Penyebarluasan Data / Data Sharing",
-          "Analisis Data & Visualisasi",
-          "Pengamanan Data & Enkripsi Data Sensitif",
-          "Pemusnahan Data Sesuai Retensi"
+          "Perencanaan Data",
+          "Pengumpulan Data",
+          "Pengolahan Data",
+          "Penyimpanan Data",
+          "Penyebarluasan Data",
+          "Analisis Data",
+          "Pengamanan Data",
+          "Pemusnahan Data"
         ]
       },
       {
         name: "Layanan Sistem Layanan Data",
         items: [
-          "BIDICS Dashboard (Pemantauan Tindak Lanjut)",
-          "BIDICS-SSA (Self Service Analytics)"
+          "BIDICS Dashboard",
+          "BIDICS-SSA"
         ]
       }
     ]
@@ -227,54 +215,27 @@ export const SERVICE_CATALOG: ServiceCatalogNode[] = [
     subs: [
       {
         name: "Pengembangan Aplikasi",
-        items: [
-          "Permintaan Fitur Baru Aplikasi",
-          "Pelaporan Bug / Error Aplikasi",
-          "Uji Coba / Testing Aplikasi Baru",
-          "Integrasi API Antar Aplikasi BPK"
-        ]
+        items: []
       },
       {
         name: "Aplikasi Pemeriksaan",
-        items: [
-          "SiAP-BPK (Sistem Informasi Pemeriksaan)",
-          "Aplikasi E-Audit Pemeriksaan Pusat",
-          "Aplikasi Kertas Kerja Pemeriksaan (KKP)",
-          "Masalah Sinkronisasi Offline SiAP-BPK"
-        ]
+        items: []
       },
       {
         name: "Aplikasi Kelembagaan",
-        items: [
-          "Aplikasi Kepegawaian (SISDM BPK)",
-          "Aplikasi Keuangan (SIKAD BPK)",
-          "Aplikasi Persuratan Dinas (E-Office)",
-          "Aplikasi Perjalanan Dinas Pegawai"
-        ]
+        items: []
       },
       {
         name: "Aplikasi Pendukung",
-        items: [
-          "Aplikasi Manajemen Risiko Biro TI",
-          "Aplikasi Helpdesk Biro TI",
-          "Aplikasi Presensi Pegawai BPK"
-        ]
+        items: []
       },
       {
         name: "Aplikasi Kolaborasi",
-        items: [
-          "Microsoft Teams BPK",
-          "BPK Cloud Storage (Nextcloud)",
-          "Aplikasi Survei Internal BPK"
-        ]
+        items: []
       },
       {
         name: "Layanan Survei",
-        items: [
-          "Pembuatan Kuesioner Baru",
-          "Analisis Hasil Survei Internal",
-          "Export Data Survei Pegawai"
-        ]
+        items: []
       }
     ]
   },
@@ -285,12 +246,12 @@ export const SERVICE_CATALOG: ServiceCatalogNode[] = [
         name: "Layanan Intranet",
         items: [
           "Pembuatan Local Area Network (LAN)",
-          "Pengaturan konfigurasi switch LAN",
-          "Penonaktifan LAN area tertentu",
-          "Penyediaan kabel LAN ruang kerja",
+          "Pengaturan konfigurasi LAN",
+          "Penonaktifan LAN",
+          "Penyediaan kabel LAN",
           "Pemasangan perangkat Wireless Fidelity (Wifi)",
-          "Pengaturan konfigurasi Wifi Biro",
-          "Penonaktifan Wifi BPK"
+          "Pengaturan konfigurasi Wifi",
+          "Penonaktifan Wifi"
         ]
       },
       {
@@ -304,15 +265,15 @@ export const SERVICE_CATALOG: ServiceCatalogNode[] = [
       {
         name: "Layanan Virtual Private Network",
         items: [
-          "Pemasangan VPN BPK di Laptop",
-          "Pengaturan konfigurasi akses VPN",
-          "Penonaktifan VPN Pegawai"
+          "Pemasangan VPN",
+          "Pengaturan konfigurasi VPN",
+          "Penonaktifan VPN"
         ]
       },
       {
         name: "Layanan Hosting",
         items: [
-          "Pendaftaran hosting subdomain *.bpk.go.id",
+          "Pendaftaran hosting subdomain",
           "Pengaturan konfigurasi hosting subdomain",
           "Penonaktifan hosting subdomain"
         ]
@@ -324,36 +285,19 @@ export const SERVICE_CATALOG: ServiceCatalogNode[] = [
     subs: [
       {
         name: "Standarisasi Perangkat Komputer",
-        items: [
-          "Konsultasi Spesifikasi PC/Laptop",
-          "Verifikasi Kelayakan Perangkat Lama",
-          "Instalasi OS Standar BPK RI"
-        ]
+        items: []
       },
       {
         name: "Pemeliharaan Perangkat",
-        items: [
-          "Pembersihan Hardware PC/Laptop",
-          "Perbaikan Kerusakan Fisik Laptop Dinas",
-          "Instalasi Antivirus / Scan Malware Perangkat"
-        ]
+        items: []
       },
       {
         name: "Peminjaman Perangkat",
-        items: [
-          "Peminjaman Laptop Rapat Paripurna",
-          "Peminjaman Projector / Proyektor",
-          "Peminjaman Sound System",
-          "Pengembalian Perangkat Pinjaman"
-        ]
+        items: []
       },
       {
         name: "Penyediaan Barang Persediaan",
-        items: [
-          "Penyediaan Toner / Tinta Printer Biro",
-          "Penyediaan Mouse / Keyboard Baru",
-          "Penyediaan Kabel Konektor Display / HDMI"
-        ]
+        items: []
       }
     ]
   },
@@ -361,13 +305,8 @@ export const SERVICE_CATALOG: ServiceCatalogNode[] = [
     category: "Layanan Dukungan TI Untuk Kegiatan Khusus",
     subs: [
       {
-        name: "Pendampingan Personel TI",
-        items: [
-          "Pendampingan Sidang / Rapat Pleno",
-          "Pendampingan Pemeriksaan Lapangan (On-Site Audit)",
-          "Pendampingan Diklat / Pelatihan TIK",
-          "Dukungan TI Acara Nasional BPK"
-        ]
+        name: "pendampingan Personel TI",
+        items: []
       }
     ]
   },
@@ -375,28 +314,16 @@ export const SERVICE_CATALOG: ServiceCatalogNode[] = [
     category: "Layanan Informasi",
     subs: [
       {
-        name: "Knowledge Base Produk TI",
-        items: [
-          "Permintaan User Manual SiAP",
-          "Permintaan Video Panduan Aplikasi",
-          "FAQ Portal Layanan TI BPK"
-        ]
+        name: "Konowledge Base Produk TI",
+        items: []
       },
       {
         name: "Informasi Produk TI",
-        items: [
-          "Katalog Layanan Biro TI Terbaru",
-          "Spesifikasi Hardware Terbaru Standard BPK",
-          "Status Rilis Aplikasi Baru Biro TI"
-        ]
+        items: []
       },
       {
         name: "Tugas dan Fungsi Biro TI",
-        items: [
-          "Struktur Organisasi Biro TI Pusat",
-          "SOP Pelayanan Layanan TI BPK",
-          "Uraian Tugas Subbagian TI"
-        ]
+        items: []
       }
     ]
   }
@@ -546,22 +473,22 @@ export const SEED_TICKETS: Ticket[] = [
     jenis: "Masalah",
     layananKategori: "Layanan Data",
     layananSub: "Layanan Sistem Layanan Data",
-    layanan: "BIDICS Dashboard (Pemantauan Tindak Lanjut)",
+    layanan: "BIDICS Dashboard",
     detail: "Dashboard Pemantauan Tindak Lanjut Rekomendasi Hasil Pemeriksaan tidak menampilkan data real-time untuk entitas Pemerintah Daerah Bali. Data terhenti di tanggal 15 Juni sedangkan sekarang sudah akhir bulan.",
     tanggal: "2026-06-24",
     tanggalUpdate: "2026-06-24 16:45",
     tanggalSelesai: "2026-06-24 16:45",
-    kasubbagId: "k6",
-    kasubbagName: "Bambang Susilo, S.Kom.",
-    solverId: "s6_1",
-    solverName: "Heri Susanto (Tata Kelola Solver 1)",
+    kasubbagId: "k5",
+    kasubbagName: "Dr. Nuraini, M.Sc.",
+    solverId: "s5_1",
+    solverName: "Rian Setiawan (Sains Solver 1)",
     status: "Selesai",
     catatanKasubbag: "Sinkronisasi pipa data (ETL pipeline) untuk region Bali sempat mengalami delay karena adanya update skema database lokal. Data sudah di-ingest ulang dan dashboard sekarang sudah kembali real-time.",
     comments: [
       {
         id: "c5_1",
-        authorId: "k6",
-        authorName: "Bambang Susilo, S.Kom.",
+        authorId: "k5",
+        authorName: "Dr. Nuraini, M.Sc.",
         authorRole: "kasubbag",
         text: "Tiket diterima.",
         timestamp: "2026-06-24 14:00",
@@ -569,26 +496,26 @@ export const SEED_TICKETS: Ticket[] = [
       },
       {
         id: "c5_2",
-        authorId: "k6",
-        authorName: "Bambang Susilo, S.Kom.",
+        authorId: "k5",
+        authorName: "Dr. Nuraini, M.Sc.",
         authorRole: "kasubbag",
-        text: "Ditugaskan ke Heri Susanto untuk re-run ETL.",
+        text: "Ditugaskan ke Rian Setiawan untuk penanganan dashboard.",
         timestamp: "2026-06-24 14:15",
         type: "penugasan"
       },
       {
         id: "c5_3",
-        authorId: "s6_1",
-        authorName: "Heri Susanto (Tata Kelola Solver 1)",
+        authorId: "s5_1",
+        authorName: "Rian Setiawan (Sains Solver 1)",
         authorRole: "solver",
-        text: "Memulai pelacakan log scheduler ETL Bali.",
+        text: "Memulai pelacakan sinkronisasi data BIDICS region Bali.",
         timestamp: "2026-06-24 14:30",
         type: "mulai_kerjakan"
       },
       {
         id: "c5_4",
-        authorId: "s6_1",
-        authorName: "Heri Susanto (Tata Kelola Solver 1)",
+        authorId: "s5_1",
+        authorName: "Rian Setiawan (Sains Solver 1)",
         authorRole: "solver",
         text: "Selesai. Sinkronisasi pipa data (ETL pipeline) untuk region Bali sempat mengalami delay karena adanya update skema database lokal. Data sudah di-ingest ulang dan dashboard sekarang sudah kembali real-time.",
         timestamp: "2026-06-24 16:45",
@@ -607,15 +534,15 @@ export const SEED_TICKETS: Ticket[] = [
     detail: "Meminta bantuan pembuatan form kuesioner pribadi untuk kegiatan arisan keluarga besar di luar kedinasan BPK.",
     tanggal: "2026-06-25",
     tanggalUpdate: "2026-06-25 10:30",
-    kasubbagId: "k3",
-    kasubbagName: "Rizal Pratama, S.T.",
+    kasubbagId: "k2",
+    kasubbagName: "Dra. Wulandari, M.Si.",
     status: "Kembalikan tiket ke operator",
     alasanTolak: "Aplikasi dan bantuan teknis Biro TI BPK hanya diperuntukkan bagi kegiatan dinas dan operasional resmi BPK RI, bukan untuk kepentingan atau urusan pribadi pegawai.",
     comments: [
       {
         id: "c6_1",
-        authorId: "k3",
-        authorName: "Rizal Pratama, S.T.",
+        authorId: "k2",
+        authorName: "Dra. Wulandari, M.Si.",
         authorRole: "kasubbag",
         text: "Aplikasi dan bantuan teknis Biro TI BPK hanya diperuntukkan bagi kegiatan dinas dan operasional resmi BPK RI, bukan untuk kepentingan atau urusan pribadi pegawai.",
         timestamp: "2026-06-25 10:30",
@@ -800,8 +727,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   ): string => {
     if (!currentUser) throw new Error("User must be logged in to create ticket");
 
-    // Route dynamically based on Kategori
-    const routingInfo = SUBBAGS[kategori] || { id: "k2", name: SUBBAG_MASTER.k2 }; // Default to k2
+    // Route dynamically based on Sub-category first, then Kategori
+    const routingInfo = SUBBAGS[sub] || SUBBAGS[kategori] || { id: "k2", name: SUBBAG_MASTER.k2 };
     const kasubbagUser = USERS.find((u) => u.role === "kasubbag" && u.subbagId === routingInfo.id);
 
     const ticketId = `TKT-${new Date().getFullYear()}-${String(tickets.length + 1).padStart(3, "0")}`;
@@ -813,7 +740,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       jenis,
       layananKategori: kategori,
       layananSub: sub,
-      layanan,
+      layanan: layanan || sub,
       detail,
       tanggal: getLocalDate(),
       tanggalUpdate: getTimestamp(),

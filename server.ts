@@ -42,9 +42,9 @@ const SERVICE_CATALOG_GUIDE = `
 
 2. Kategori: "Layanan Data"
    - Sub-Layanan: "Pengelolaan Data"
-     * Items: "Perencanaan Data Pemeriksaan", "Pengumpulan Data dari Entitas", "Pengolahan Data Audit BPK", "Penyimpanan Data di Gudang Data Pusat", "Penyebarluasan Data / Data Sharing", "Analisis Data & Visualisasi", "Pengamanan Data & Enkripsi Data Sensitif", "Pemusnahan Data Sesuai Retensi"
+     * Items: "Perencanaan Data", "Pengumpulan Data", "Pengolahan Data", "Penyimpanan Data", "Penyebarluasan Data", "Analisis Data", "Pengamanan Data", "Pemusnahan Data"
    - Sub-Layanan: "Layanan Sistem Layanan Data"
-     * Items: "BIDICS Dashboard (Pemantauan Tindak Lanjut)", "BIDICS-SSA (Self Service Analytics)"
+     * Items: "BIDICS Dashboard", "BIDICS-SSA"
 
 3. Kategori: "Layanan Aplikasi"
    - Sub-Layanan: "Pengembangan Aplikasi"
@@ -62,13 +62,13 @@ const SERVICE_CATALOG_GUIDE = `
 
 4. Kategori: "Layanan Teknologi"
    - Sub-Layanan: "Layanan Intranet"
-     * Items: "Pembuatan Local Area Network (LAN)", "Pengaturan konfigurasi switch LAN", "Penonaktifan LAN area tertentu", "Penyediaan kabel LAN ruang kerja", "Pemasangan perangkat Wireless Fidelity (Wifi)", "Pengaturan konfigurasi Wifi Biro", "Penonaktifan Wifi BPK"
+     * Items: "Pembuatan Local Area Network (LAN)", "Pengaturan konfigurasi LAN", "Penonaktifan LAN", "Penyediaan kabel LAN", "Pemasangan perangkat Wireless Fidelity (Wifi)", "Pengaturan konfigurasi Wifi", "Penonaktifan Wifi"
    - Sub-Layanan: "Layanan Internet"
      * Items: "Pemasangan perangkat koneksi internet", "Pengaturan konfigurasi perangkat koneksi internet", "Penonaktifan perangkat koneksi internet"
    - Sub-Layanan: "Layanan Virtual Private Network"
-     * Items: "Pemasangan VPN BPK di Laptop", "Pengaturan konfigurasi akses VPN", "Penonaktifan VPN Pegawai"
+     * Items: "Pemasangan VPN", "Pengaturan konfigurasi VPN", "Penonaktifan VPN"
    - Sub-Layanan: "Layanan Hosting"
-     * Items: "Pendaftaran hosting subdomain *.bpk.go.id", "Pengaturan konfigurasi hosting subdomain", "Penonaktifan hosting subdomain"
+     * Items: "Pendaftaran hosting subdomain", "Pengaturan konfigurasi hosting subdomain", "Penonaktifan hosting subdomain"
 
 5. Kategori: "Layanan Perangkat"
    - Sub-Layanan: "Standarisasi Perangkat Komputer"
@@ -86,7 +86,11 @@ const SERVICE_CATALOG_GUIDE = `
 
 7. Kategori: "Layanan Informasi"
    - Sub-Layanan: "Knowledge Base Produk TI"
-     * Items: "FAQ Portal Layanan TI BPK"
+     * Items: "Permintaan User Manual SiAP", "Permintaan Video Panduan Aplikasi", "FAQ Portal Layanan TI BPK"
+   - Sub-Layanan: "Informasi Produk TI"
+     * Items: "Katalog Layanan Biro TI Terbaru", "Spesifikasi Hardware Terbaru Standard BPK", "Status Rilis Aplikasi Baru Biro TI"
+   - Sub-Layanan: "Tugas dan Fungsi Biro TI"
+     * Items: "Struktur Organisasi Biro TI Pusat", "SOP Pelayanan Layanan TI BPK", "Uraian Tugas Subbagian TI"
 `;
 
 // API routes FIRST
