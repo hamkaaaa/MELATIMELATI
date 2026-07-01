@@ -609,7 +609,8 @@ export const SEED_TICKETS: Ticket[] = [
 interface AppContextType {
   currentUser: User | null;
   tickets: Ticket[];
-  login: (username: string, password: string) => boolean;
+  dbError: string | null;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   createTicket: (jenis: JenisLaporan, kategori: string, sub: string, layanan: string, detail: string) => string;
   kasubbagAccept: (ticketId: string, kasubbag: User) => void;
@@ -637,23 +638,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
-  // Load tickets from localStorage or use SEED_TICKETS
-  const [tickets, setTickets] = useState<Ticket[]>(() => {
-    try {
-      const savedTickets = localStorage.getItem("bpk_ti_tickets_v3");
-      if (savedTickets) {
-        return JSON.parse(savedTickets);
-      }
-    } catch (e) {
-      console.error("Error reading bpk_ti_tickets_v3", e);
-    }
-    return SEED_TICKETS;
-  });
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [dbError, setDbError] = useState<string | null>(null);
 
-  // Save tickets to localStorage on change
+  // Load tickets from MySQL Database backend
+  const fetchTickets = async () => {
+    try {
+      const res = await fetch("/api/tickets");
+      if (res.ok) {
+        const data = await res.json();
+        setTickets(data);
+        setDbError(null);
+      } else {
+        const errData = await res.json();
+        setDbError(errData.error || "Gagal memuat data dari database.");
+      }
+    } catch (e: any) {
+      console.error("Error fetching tickets from server:", e);
+      setDbError("Koneksi database ke phpMyAdmin gagal. Pastikan XAMPP Apache & MySQL sudah aktif.");
+    }
+  };
+
   useEffect(() => {
-    localStorage.setItem("bpk_ti_tickets_v3", JSON.stringify(tickets));
-  }, [tickets]);
+    fetchTickets();
+  }, [currentUser]);
 
   // Helper for current timestamp
   const getTimestamp = (): string => {
@@ -669,7 +677,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Auth Operations
-  const login = (username: string, password: string): boolean => {
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      if (res.ok) {
+        const user = await res.json();
+        setCurrentUser(user);
+        localStorage.setItem("bpk_ti_user", JSON.stringify(user));
+        return true;
+      }
+    } catch (e) {
+      console.error("Login API request failed, falling back to local auth", e);
+    }
+
+    // Fallback if DB API is offline or database isn't initialized yet
     const matched = USERS.find(
       (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
     );
@@ -686,20 +711,74 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("bpk_ti_user");
   };
 
-  // Add Comment helper
-  const addCommentInternal = (ticketId: string, text: string, type: CommentType, author: User) => {
+  // Generic helper to update a ticket state via database REST API and refresh local state
+  const executeTicketAction = async (
+    ticketId: string,
+    updatedFields: Partial<Ticket>,
+    newComment?: Comment
+  ) => {
+    // Optimistic local state update
     setTickets((prev) =>
       prev.map((t) => {
         if (t.id === ticketId) {
-          const newComment: Comment = {
-            id: `cmt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-            authorId: author.id,
-            authorName: author.name,
-            authorRole: author.role,
-            text,
-            timestamp: getTimestamp(),
-            type,
+          const updated = {
+            ...t,
+            ...updatedFields,
+            tanggalUpdate: getTimestamp(),
           };
+          if (newComment) {
+            updated.comments = [...t.comments, newComment];
+          }
+          return updated as Ticket;
+        }
+        return t;
+      })
+    );
+
+    // Persist to MySQL
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/actions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: updatedFields.status,
+          kasubbagId: updatedFields.kasubbagId,
+          kasubbagName: updatedFields.kasubbagName,
+          solverId: updatedFields.solverId,
+          solverName: updatedFields.solverName,
+          alasanTolak: updatedFields.alasanTolak,
+          catatanKasubbag: updatedFields.catatanKasubbag,
+          tanggalSelesai: updatedFields.tanggalSelesai,
+          tanggalUpdate: getTimestamp(),
+          comment: newComment
+        })
+      });
+      if (!res.ok) {
+        console.error("Action API error");
+        fetchTickets(); // rollback to DB state if failed
+      }
+    } catch (e) {
+      console.error("Action request failed, state remains local", e);
+    }
+  };
+
+  // Public Add Comment action
+  const addComment = async (ticketId: string, text: string, type: CommentType) => {
+    if (!currentUser) return;
+    const newComment: Comment = {
+      id: `cmt-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      authorRole: currentUser.role,
+      text,
+      timestamp: getTimestamp(),
+      type,
+    };
+
+    // Optimistic local update
+    setTickets((prev) =>
+      prev.map((t) => {
+        if (t.id === ticketId) {
           return {
             ...t,
             tanggalUpdate: getTimestamp(),
@@ -709,12 +788,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return t;
       })
     );
-  };
 
-  // Public Add Comment action
-  const addComment = (ticketId: string, text: string, type: CommentType) => {
-    if (!currentUser) return;
-    addCommentInternal(ticketId, text, type, currentUser);
+    // Persist to MySQL
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: newComment })
+      });
+      if (!res.ok) fetchTickets(); // sync back if failed
+    } catch (e) {
+      console.error("Failed to add comment to database", e);
+    }
   };
 
   // Create Ticket Action
@@ -733,6 +818,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const ticketId = `TKT-${new Date().getFullYear()}-${String(tickets.length + 1).padStart(3, "0")}`;
 
+    const newComment: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: currentUser.id,
+      authorName: currentUser.name,
+      authorRole: currentUser.role,
+      text: `Tiket baru berhasil diajukan dengan kategori "${kategori}" → "${sub}" → "${layanan}". Otomatis diteruskan ke ${routingInfo.name}.`,
+      timestamp: getTimestamp(),
+      type: "sistem",
+    };
+
     const newTicket: Ticket = {
       id: ticketId,
       pengirimId: currentUser.id,
@@ -747,271 +842,174 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       kasubbagId: routingInfo.id,
       kasubbagName: kasubbagUser ? kasubbagUser.name : `Kasubbag ${routingInfo.name}`,
       status: "Pending",
-      comments: [
-        {
-          id: `cmt-${Date.now()}`,
-          authorId: currentUser.id,
-          authorName: currentUser.name,
-          authorRole: currentUser.role,
-          text: `Tiket baru berhasil diajukan dengan kategori "${kategori}" → "${sub}" → "${layanan}". Otomatis diteruskan ke ${routingInfo.name}.`,
-          timestamp: getTimestamp(),
-          type: "sistem",
-        },
-      ],
+      comments: [newComment],
     };
 
+    // Optimistic local update
     setTickets((prev) => [newTicket, ...prev]);
+
+    // Persist to MySQL
+    fetch("/api/tickets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newTicket)
+    }).catch((e) => console.error("Failed to persist new ticket to database", e));
+
     return ticketId;
   };
 
   // Kasubbag Actions
   const kasubbagAccept = (ticketId: string, kasubbag: User) => {
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: kasubbag.id,
-            authorName: kasubbag.name,
-            authorRole: "kasubbag",
-            text: `Tiket diterima oleh Kasubbag: ${kasubbag.name}.`,
-            timestamp: getTimestamp(),
-            type: "terima",
-          };
-          return {
-            ...t,
-            status: "Diterima" as TicketStatus,
-            tanggalUpdate: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: kasubbag.id,
+      authorName: kasubbag.name,
+      authorRole: "kasubbag",
+      text: `Tiket diterima oleh Kasubbag: ${kasubbag.name}.`,
+      timestamp: getTimestamp(),
+      type: "terima",
+    };
+    executeTicketAction(ticketId, { status: "Diterima" }, systemCmt);
   };
 
   const kasubbagAssign = (ticketId: string, solverId: string, kasubbag: User) => {
     const solverUser = USERS.find((u) => u.id === solverId);
     if (!solverUser) return;
 
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: kasubbag.id,
-            authorName: kasubbag.name,
-            authorRole: "kasubbag",
-            text: `Menugaskan tiket ini kepada Solver: ${solverUser.name}.`,
-            timestamp: getTimestamp(),
-            type: "penugasan",
-          };
-          return {
-            ...t,
-            status: "Ditugaskan" as TicketStatus,
-            solverId: solverUser.id,
-            solverName: solverUser.name,
-            tanggalUpdate: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: kasubbag.id,
+      authorName: kasubbag.name,
+      authorRole: "kasubbag",
+      text: `Menugaskan tiket ini kepada Solver: ${solverUser.name}.`,
+      timestamp: getTimestamp(),
+      type: "penugasan",
+    };
+    executeTicketAction(ticketId, {
+      status: "Ditugaskan",
+      solverId: solverUser.id,
+      solverName: solverUser.name,
+    }, systemCmt);
   };
 
   const kasubbagComplete = (ticketId: string, notes: string, kasubbag: User) => {
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: kasubbag.id,
-            authorName: kasubbag.name,
-            authorRole: "kasubbag",
-            text: `Tiket diselesaikan langsung oleh Kasubbag. Catatan: ${notes}`,
-            timestamp: getTimestamp(),
-            type: "penyelesaian",
-          };
-          return {
-            ...t,
-            status: "Selesai" as TicketStatus,
-            catatanKasubbag: notes,
-            tanggalUpdate: getTimestamp(),
-            tanggalSelesai: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: kasubbag.id,
+      authorName: kasubbag.name,
+      authorRole: "kasubbag",
+      text: `Tiket diselesaikan langsung oleh Kasubbag. Catatan: ${notes}`,
+      timestamp: getTimestamp(),
+      type: "penyelesaian",
+    };
+    executeTicketAction(ticketId, {
+      status: "Selesai",
+      catatanKasubbag: notes,
+      tanggalSelesai: getTimestamp(),
+    }, systemCmt);
   };
 
   const kasubbagReject = (ticketId: string, reason: string, kasubbag: User) => {
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: kasubbag.id,
-            authorName: kasubbag.name,
-            authorRole: "kasubbag",
-            text: `Kembalikan tiket ke operator. Alasan: ${reason}`,
-            timestamp: getTimestamp(),
-            type: "Kembalikan tiket ke operator",
-          };
-          return {
-            ...t,
-            status: "Kembalikan tiket ke operator" as TicketStatus,
-            isRejectedBySubbag: true,
-            alasanTolak: reason,
-            tanggalUpdate: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: kasubbag.id,
+      authorName: kasubbag.name,
+      authorRole: "kasubbag",
+      text: `Kembalikan tiket ke operator. Alasan: ${reason}`,
+      timestamp: getTimestamp(),
+      type: "Kembalikan tiket ke operator",
+    };
+    executeTicketAction(ticketId, {
+      status: "Kembalikan tiket ke operator",
+      alasanTolak: reason,
+    }, systemCmt);
   };
 
   // Solver Actions
   const solverStart = (ticketId: string, solver: User) => {
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: solver.id,
-            authorName: solver.name,
-            authorRole: "solver",
-            text: `Pekerjaan tiket dimulai oleh Solver: ${solver.name}.`,
-            timestamp: getTimestamp(),
-            type: "mulai_kerjakan",
-          };
-          return {
-            ...t,
-            status: "Dikerjakan" as TicketStatus,
-            tanggalUpdate: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: solver.id,
+      authorName: solver.name,
+      authorRole: "solver",
+      text: `Pekerjaan tiket dimulai oleh Solver: ${solver.name}.`,
+      timestamp: getTimestamp(),
+      type: "mulai_kerjakan",
+    };
+    executeTicketAction(ticketId, { status: "Dikerjakan" }, systemCmt);
   };
 
   const solverComplete = (ticketId: string, notes: string, solver: User) => {
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: solver.id,
-            authorName: solver.name,
-            authorRole: "solver",
-            text: `Pekerjaan tiket ditandai selesai oleh Solver. Catatan: ${notes}`,
-            timestamp: getTimestamp(),
-            type: "penyelesaian",
-          };
-          return {
-            ...t,
-            status: "Selesai" as TicketStatus,
-            catatanKasubbag: notes, // Store solver notes here for simplicity and shared access
-            tanggalUpdate: getTimestamp(),
-            tanggalSelesai: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: solver.id,
+      authorName: solver.name,
+      authorRole: "solver",
+      text: `Pekerjaan tiket ditandai selesai oleh Solver. Catatan: ${notes}`,
+      timestamp: getTimestamp(),
+      type: "penyelesaian",
+    };
+    executeTicketAction(ticketId, {
+      status: "Selesai",
+      catatanKasubbag: notes,
+      tanggalSelesai: getTimestamp(),
+    }, systemCmt);
   };
 
   const solverEscalate = (ticketId: string, reason: string, solver: User) => {
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: solver.id,
-            authorName: solver.name,
-            authorRole: "solver",
-            text: `Tiket dieskalasi kembali ke Kasubbag oleh Solver ${solver.name}. Alasan: ${reason}`,
-            timestamp: getTimestamp(),
-            type: "eskalasi",
-          };
-          return {
-            ...t,
-            status: "Dieskalasi" as TicketStatus,
-            solverId: undefined, // unassign
-            solverName: undefined, // unassign
-            tanggalUpdate: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: solver.id,
+      authorName: solver.name,
+      authorRole: "solver",
+      text: `Tiket dieskalasi kembali ke Kasubbag oleh Solver ${solver.name}. Alasan: ${reason}`,
+      timestamp: getTimestamp(),
+      type: "eskalasi",
+    };
+    executeTicketAction(ticketId, {
+      status: "Dieskalasi",
+      solverId: null as any,
+      solverName: null as any,
+    }, systemCmt);
   };
 
   const solverClaim = (ticketId: string, solver: User) => {
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: solver.id,
-            authorName: solver.name,
-            authorRole: "solver",
-            text: `Tiket diambil secara mandiri oleh Solver: ${solver.name}.`,
-            timestamp: getTimestamp(),
-            type: "penugasan",
-          };
-          return {
-            ...t,
-            status: "Ditugaskan" as TicketStatus,
-            solverId: solver.id,
-            solverName: solver.name,
-            tanggalUpdate: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: solver.id,
+      authorName: solver.name,
+      authorRole: "solver",
+      text: `Tiket diambil secara mandiri oleh Solver: ${solver.name}.`,
+      timestamp: getTimestamp(),
+      type: "penugasan",
+    };
+    executeTicketAction(ticketId, {
+      status: "Ditugaskan",
+      solverId: solver.id,
+      solverName: solver.name,
+    }, systemCmt);
   };
 
   const operatorReassign = (ticketId: string, newSubbagId: string, operator: User) => {
     const subbagName = SUBBAG_MASTER[newSubbagId];
     const kasubbagUser = USERS.find((u) => u.role === "kasubbag" && u.subbagId === newSubbagId);
-    setTickets((prev) =>
-      prev.map((t) => {
-        if (t.id === ticketId) {
-          const systemCmt: Comment = {
-            id: `cmt-${Date.now()}`,
-            authorId: operator.id,
-            authorName: operator.name,
-            authorRole: "operator",
-            text: `Operator ${operator.name} mengalihkan tiket ke ${subbagName}.`,
-            timestamp: getTimestamp(),
-            type: "penugasan",
-          };
-          return {
-            ...t,
-            status: "Pending" as TicketStatus,
-            isRejectedBySubbag: false, // reset the rejection flag
-            kasubbagId: newSubbagId,
-            kasubbagName: kasubbagUser ? kasubbagUser.name : `Kasubbag ${subbagName}`,
-            solverId: undefined,
-            solverName: undefined,
-            alasanTolak: undefined, // clear the previous rejection reason
-            tanggalUpdate: getTimestamp(),
-            comments: [...t.comments, systemCmt],
-          };
-        }
-        return t;
-      })
-    );
+    const systemCmt: Comment = {
+      id: `cmt-${Date.now()}`,
+      authorId: operator.id,
+      authorName: operator.name,
+      authorRole: "operator",
+      text: `Operator ${operator.name} mengalihkan tiket ke ${subbagName}.`,
+      timestamp: getTimestamp(),
+      type: "penugasan",
+    };
+    executeTicketAction(ticketId, {
+      status: "Pending",
+      kasubbagId: newSubbagId,
+      kasubbagName: kasubbagUser ? kasubbagUser.name : `Kasubbag ${subbagName}`,
+      solverId: null as any,
+      solverName: null as any,
+      alasanTolak: null as any,
+    }, systemCmt);
   };
 
   return (
@@ -1019,6 +1017,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         currentUser,
         tickets,
+        dbError,
         login,
         logout,
         createTicket,

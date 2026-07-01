@@ -3,12 +3,51 @@ import path from "path";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
+import mysql from "mysql2/promise";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
+
+// Setup MySQL Connection Pool (graceful warning if XAMPP is offline)
+let pool: mysql.Pool;
+
+try {
+  pool = mysql.createPool({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "",
+    database: process.env.DB_NAME || "db_layanan_ti",
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    connectTimeout: 5000
+  });
+  console.log("MySQL connection pool created successfully on http://localhost:3306");
+} catch (err) {
+  console.error("CRITICAL: Failed to initialize MySQL Connection Pool:", err);
+}
+
+// Middleware to verify database connectivity before routing DB API requests
+const checkDbConnection = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  try {
+    if (!pool) {
+      throw new Error("Database pool is not initialized.");
+    }
+    // Ping DB to test connection
+    const conn = await pool.getConnection();
+    conn.release();
+    next();
+  } catch (error: any) {
+    console.error("Database connection failure:", error.message);
+    res.status(503).json({
+      error: "Koneksi database ke phpMyAdmin gagal.",
+      details: "Pastikan XAMPP Apache & MySQL sudah aktif dan database 'db_layanan_ti' sudah diimport menggunakan file database.sql."
+    });
+  }
+};
 
 // Initialize Google Gen AI SDK
 const apiKey = process.env.GEMINI_API_KEY;
@@ -94,6 +133,115 @@ const SERVICE_CATALOG_GUIDE = `
 `;
 
 // API routes FIRST
+
+// DB API: Get all tickets + comments
+app.get("/api/tickets", checkDbConnection, async (req, res) => {
+  try {
+    const [tickets]: any = await pool.query("SELECT * FROM tickets ORDER BY tanggalUpdate DESC");
+    const [comments]: any = await pool.query("SELECT * FROM comments ORDER BY timestamp ASC");
+    
+    const ticketsWithComments = tickets.map((t: any) => {
+      return {
+        ...t,
+        tanggalSelesai: t.tanggalSelesai || undefined,
+        kasubbagId: t.kasubbagId || undefined,
+        kasubbagName: t.kasubbagName || undefined,
+        solverId: t.solverId || undefined,
+        solverName: t.solverName || undefined,
+        alasanTolak: t.alasanTolak || undefined,
+        catatanKasubbag: t.catatanKasubbag || undefined,
+        comments: comments
+          .filter((c: any) => c.ticketId === t.id)
+          .map((c: any) => ({
+            id: c.id,
+            authorId: c.authorId,
+            authorName: c.authorName,
+            authorRole: c.authorRole,
+            text: c.text,
+            timestamp: c.timestamp,
+            type: c.type
+          }))
+      };
+    });
+    
+    return res.json(ticketsWithComments);
+  } catch (err: any) {
+    console.error("Database fetch tickets error:", err);
+    return res.status(500).json({ error: "Gagal mengambil data tiket dari database." });
+  }
+});
+
+// DB API: Create new ticket
+app.post("/api/tickets", checkDbConnection, async (req, res) => {
+  const { id, pengirimId, pengirimName, jenis, layananKategori, layananSub, layanan, detail, tanggal, tanggalUpdate, kasubbagId, kasubbagName, status, comments } = req.body;
+  try {
+    await pool.query(
+      "INSERT INTO tickets (id, pengirimId, pengirimName, jenis, layananKategori, layananSub, layanan, detail, tanggal, tanggalUpdate, kasubbagId, kasubbagName, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [id, pengirimId, pengirimName, jenis, layananKategori, layananSub, layanan, detail, tanggal, tanggalUpdate, kasubbagId || null, kasubbagName || null, status]
+    );
+
+    if (comments && comments.length > 0) {
+      for (const c of comments) {
+        await pool.query(
+          "INSERT INTO comments (id, ticketId, authorId, authorName, authorRole, text, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          [c.id, id, c.authorId, c.authorName, c.authorRole, c.text, c.timestamp, c.type]
+        );
+      }
+    }
+
+    return res.json({ success: true, id });
+  } catch (err: any) {
+    console.error("Database insert ticket error:", err);
+    return res.status(500).json({ error: "Gagal menyimpan tiket ke database." });
+  }
+});
+
+// DB API: Update ticket details and insert comment
+app.post("/api/tickets/:id/actions", checkDbConnection, async (req, res) => {
+  const { id } = req.params;
+  const { status, kasubbagId, kasubbagName, solverId, solverName, alasanTolak, catatanKasubbag, tanggalSelesai, tanggalUpdate, comment } = req.body;
+  try {
+    await pool.query(
+      "UPDATE tickets SET status = ?, kasubbagId = ?, kasubbagName = ?, solverId = ?, solverName = ?, alasanTolak = ?, catatanKasubbag = ?, tanggalSelesai = ?, tanggalUpdate = ? WHERE id = ?",
+      [status, kasubbagId || null, kasubbagName || null, solverId || null, solverName || null, alasanTolak || null, catatanKasubbag || null, tanggalSelesai || null, tanggalUpdate, id]
+    );
+
+    if (comment) {
+      await pool.query(
+        "INSERT INTO comments (id, ticketId, authorId, authorName, authorRole, text, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [comment.id, id, comment.authorId, comment.authorName, comment.authorRole, comment.text, comment.timestamp, comment.type]
+      );
+    }
+
+    return res.json({ success: true });
+  } catch (err: any) {
+    console.error("Database update action error:", err);
+    return res.status(500).json({ error: "Gagal memperbarui data tiket di database." });
+  }
+});
+
+// DB API: Add comment to ticket
+app.post("/api/tickets/:id/comments", checkDbConnection, async (req, res) => {
+  const { id } = req.params;
+  const { comment } = req.body;
+  try {
+    await pool.query(
+      "INSERT INTO comments (id, ticketId, authorId, authorName, authorRole, text, timestamp, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      [comment.id, id, comment.authorId, comment.authorName, comment.authorRole, comment.text, comment.timestamp, comment.type]
+    );
+
+    await pool.query(
+      "UPDATE tickets SET tanggalUpdate = ? WHERE id = ?",
+      [comment.timestamp, id]
+    );
+
+    return res.json({ success: true });
+  } catch (err: any) {
+    console.error("Database insert comment error:", err);
+    return res.status(500).json({ error: "Gagal menyimpan komentar ke database." });
+  }
+});
+
 app.post("/api/chat-recommend", async (req, res) => {
   try {
     const { messages } = req.body;

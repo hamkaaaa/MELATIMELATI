@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   Building,
   Menu,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 
 // --- STATUS BADGE COMPONENT ---
@@ -71,7 +72,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { currentUser, logout } = useApp();
+  const { currentUser, logout, dbError } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -256,6 +257,16 @@ export default function Layout({ children }: LayoutProps) {
                 <X className="w-6 h-6" />
               </button>
               {sidebarContent}
+            </div>
+          </div>
+        )}
+
+        {dbError && (
+          <div className="mx-4 md:mx-6 mt-4 md:mt-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-start gap-3">
+            <AlertTriangle className="w-4.5 h-4.5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-amber-900 mb-0.5">Database Offline (Mode Simulasi Aktif)</p>
+              <p className="text-[11px] text-amber-700 font-medium leading-relaxed">{dbError}</p>
             </div>
           </div>
         )}
