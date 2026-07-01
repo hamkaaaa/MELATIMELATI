@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "./fonts.css";
+@import "./theme.css";
+
+/* Custom utility styles if needed */
+.scroll-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@keyframes spin-flower {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-left-flower {
+  animation: spin-flower 20s linear infinite;
+  transform-origin: 0px 0px;
+}
+
+@keyframes spin-flower-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-right-flower {
+  animation: spin-flower-reverse 25s linear infinite;
+  transform-origin: 0px 0px;
+}

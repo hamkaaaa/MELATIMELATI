@@ -1,0 +1,6 @@
+{
+  "name": "Portal Layanan TI BPK",
+  "description": "Sistem Manajemen Tiket Terpadu Badan Pemeriksa Keuangan Republik Indonesia",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

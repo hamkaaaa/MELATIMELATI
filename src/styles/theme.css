@@ -1,0 +1,19 @@
+@theme {
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-brand-primary: #b26d27;
+  --color-brand-hover: #9b5a1b;
+  --color-brand-light: #fcf4ec;
+  --color-brand-medium: #f7e3ce;
+  --color-app-bg: #f4f6f9;
+  --color-app-fg: #37251b;
+  --color-app-border: #e2e6ea;
+}
+
+body {
+  background-color: var(--color-app-bg);
+  color: var(--color-app-fg);
+  font-family: var(--font-sans);
+}
