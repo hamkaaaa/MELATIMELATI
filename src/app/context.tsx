@@ -647,7 +647,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch("/api/tickets");
       if (res.ok) {
         const data = await res.json();
-        setTickets(data);
+        const mappedData = data.map((t: Ticket) => {
+          if (t.status === "Kembalikan tiket ke operator") {
+            return { ...t, isRejectedBySubbag: true };
+          }
+          return t;
+        });
+        setTickets(mappedData);
         setDbError(null);
       } else {
         const errData = await res.json();
@@ -922,6 +928,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     executeTicketAction(ticketId, {
       status: "Kembalikan tiket ke operator",
       alasanTolak: reason,
+      isRejectedBySubbag: true,
     }, systemCmt);
   };
 
@@ -1009,6 +1016,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       solverId: null as any,
       solverName: null as any,
       alasanTolak: null as any,
+      isRejectedBySubbag: false,
     }, systemCmt);
   };
 

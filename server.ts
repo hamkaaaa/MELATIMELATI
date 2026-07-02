@@ -53,13 +53,13 @@ const checkDbConnection = async (req: express.Request, res: express.Response, ne
 const apiKey = process.env.GEMINI_API_KEY;
 const ai = apiKey
   ? new GoogleGenAI({
-      apiKey: apiKey,
-      httpOptions: {
-        headers: {
-          "User-Agent": "aistudio-build",
-        },
+    apiKey: apiKey,
+    httpOptions: {
+      headers: {
+        "User-Agent": "aistudio-build",
       },
-    })
+    },
+  })
   : null;
 
 // Parse JSON bodies
@@ -139,7 +139,7 @@ app.get("/api/tickets", checkDbConnection, async (req, res) => {
   try {
     const [tickets]: any = await pool.query("SELECT * FROM tickets ORDER BY tanggalUpdate DESC");
     const [comments]: any = await pool.query("SELECT * FROM comments ORDER BY timestamp ASC");
-    
+
     const ticketsWithComments = tickets.map((t: any) => {
       return {
         ...t,
@@ -163,7 +163,7 @@ app.get("/api/tickets", checkDbConnection, async (req, res) => {
           }))
       };
     });
-    
+
     return res.json(ticketsWithComments);
   } catch (err: any) {
     console.error("Database fetch tickets error:", err);

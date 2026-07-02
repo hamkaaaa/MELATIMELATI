@@ -33,7 +33,7 @@ export default function UserDashboard() {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
   // Form State
-  const [jenis, setJenis] = useState<JenisLaporan>("Insiden");
+  const [jenis, setJenis] = useState<JenisLaporan>("Permintaan");
   const [kategori, setKategori] = useState("");
   const [subLayanan, setSubLayanan] = useState("");
   const [detailLayanan, setDetailLayanan] = useState("");
@@ -41,7 +41,7 @@ export default function UserDashboard() {
   const [successTicketId, setSuccessTicketId] = useState<string | null>(null);
 
   // Search & Filter in "Tiket Saya"
-  const [statusFilter, setStatusFilter] = useState<"All" | "Aktif" | "Selesai" | "Kembalikan tiket ke operator">("All");
+  const [statusFilter, setStatusFilter] = useState<"All" | "Aktif" | "Selesai">("All");
   const [searchTerm, setSearchTerm] = useState("");
 
   // Get user tickets
@@ -67,7 +67,7 @@ export default function UserDashboard() {
 
   // Helper to get actual status from user's perspective
   const getDisplayStatusForUser = (t: Ticket) => {
-    if (t.status === "Kembalikan tiket ke operator" && t.isRejectedBySubbag) {
+    if (t.status === "Kembalikan tiket ke operator") {
       return "Pending";
     }
     return t.status;
@@ -81,7 +81,7 @@ export default function UserDashboard() {
     return s === "Diterima" || s === "Ditugaskan" || s === "Dikerjakan" || s === "Dieskalasi";
   }).length;
   const completedCount = myTickets.filter((t) => getDisplayStatusForUser(t) === "Selesai").length;
-  const rejectedCount = myTickets.filter((t) => getDisplayStatusForUser(t) === "Kembalikan tiket ke operator").length;
+  const rejectedCount = myTickets.filter((t) => t.status === "Kembalikan tiket ke operator").length;
 
   // Cascading lists
   const activeCategoryNode = SERVICE_CATALOG.find((c) => c.category === kategori);
@@ -135,11 +135,9 @@ export default function UserDashboard() {
   const filteredTickets = myTickets.filter((t) => {
     const displayStatus = getDisplayStatusForUser(t);
     if (statusFilter === "Aktif") {
-      if (displayStatus === "Selesai" || displayStatus === "Kembalikan tiket ke operator") return false;
+      if (displayStatus === "Selesai") return false;
     } else if (statusFilter === "Selesai") {
       if (displayStatus !== "Selesai") return false;
-    } else if (statusFilter === "Kembalikan tiket ke operator") {
-      if (displayStatus !== "Kembalikan tiket ke operator") return false;
     }
 
     // Search filter
@@ -253,7 +251,7 @@ export default function UserDashboard() {
                 <thead>
                   <tr className="bg-slate-50 text-gray-500 font-bold text-[10px] tracking-wider uppercase font-mono border-b border-gray-100">
                     <th className="p-4 pl-6">ID Tiket</th>
-                    <th className="p-4">Jenis / Kategori</th>
+                    <th className="p-4">Kategori Layanan</th>
                     <th className="p-4">Layanan</th>
                     <th className="p-4">Tanggal Update</th>
                     <th className="p-4">Status</th>
@@ -265,8 +263,8 @@ export default function UserDashboard() {
                     <tr key={ticket.id} className="hover:bg-slate-50/50 transition-colors">
                       <td className="p-4 pl-6 font-mono font-bold text-gray-800">{ticket.id}</td>
                       <td className="p-4">
-                        <span className="font-semibold text-gray-900 block">{ticket.jenis}</span>
-                        <span className="text-gray-400 text-[10px] block">{ticket.layananKategori}</span>
+                        <span className="font-semibold text-gray-900 block">{ticket.layananKategori}</span>
+                        <span className="text-gray-400 text-[10px] block">{ticket.layananSub}</span>
                       </td>
                       <td className="p-4">
                         <span className="font-semibold text-gray-700 block truncate max-w-xs" title={ticket.layanan}>
@@ -370,33 +368,7 @@ export default function UserDashboard() {
               </div>
 
               <form onSubmit={handleSubmitReport} className="space-y-4">
-                {/* Jenis Laporan (Radio) */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                    Jenis Laporan
-                  </label>
-                  <div className="flex gap-3">
-                    {["Insiden", "Permintaan", "Masalah"].map((type) => (
-                      <label
-                        key={type}
-                        className={`flex-1 border rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer transition-all ${jenis === type
-                          ? "border-[#b26d27] bg-[#fcf4ec]/30 ring-1 ring-[#b26d27] text-[#b26d27]"
-                          : "border-gray-200 bg-white hover:bg-slate-50 text-gray-600"
-                          }`}
-                      >
-                        <input
-                          type="radio"
-                          name="jenisLaporan"
-                          value={type}
-                          checked={jenis === type}
-                          onChange={() => setJenis(type as any)}
-                          className="sr-only"
-                        />
-                        <span className="text-xs font-bold">{type}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                {/* Level 1 Selector */}
 
                 {/* Level 1 Selector */}
                 <div>

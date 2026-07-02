@@ -366,7 +366,7 @@ export default function OperatorDashboard() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#b26d27] text-gray-700 font-semibold sm:col-span-4"
+                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#b26d27] text-gray-700 font-semibold sm:col-span-7"
               >
                 <option value="All">Semua Status</option>
                 <option value="Pending">Pending</option>
@@ -377,18 +377,6 @@ export default function OperatorDashboard() {
                 <option value="Selesai">Selesai</option>
                 <option value="Kembalikan tiket ke operator">Kembalikan tiket ke operator (Final)</option>
                 <option value="Kembalikan tiket ke operator Kasubbag">Kembalikan tiket ke operator Kasubbag (Reassign)</option>
-              </select>
-
-              {/* Jenis Filter */}
-              <select
-                value={jenisFilter}
-                onChange={(e) => setJenisFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-[#b26d27] text-gray-700 font-semibold sm:col-span-3"
-              >
-                <option value="All">Semua Jenis</option>
-                <option value="Insiden">Insiden</option>
-                <option value="Permintaan">Permintaan</option>
-                <option value="Masalah">Masalah</option>
               </select>
             </div>
           </div>
@@ -454,9 +442,6 @@ export default function OperatorDashboard() {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <span className="font-mono font-bold text-gray-900">{selectedTicket.id}</span>
-                    <span className="text-[9px] bg-white border border-gray-200 font-bold px-1.5 py-0.5 rounded text-gray-500 uppercase font-mono">
-                      {selectedTicket.jenis}
-                    </span>
                   </div>
                   <p className="text-[9px] text-gray-400 mt-0.5">Pengirim: {selectedTicket.pengirimName}</p>
                 </div>

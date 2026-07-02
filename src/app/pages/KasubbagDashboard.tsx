@@ -208,9 +208,6 @@ export default function KasubbagDashboard() {
                   <span className="font-mono font-black text-sm md:text-base text-gray-900">
                     {selectedTicket.id}
                   </span>
-                  <span className="text-[10px] bg-white border border-gray-200 font-bold px-2 py-0.5 rounded-md text-gray-500 uppercase font-mono">
-                    {selectedTicket.jenis}
-                  </span>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-0.5">Pengirim: {selectedTicket.pengirimName} | Tanggal: {selectedTicket.tanggal}</p>
               </div>

@@ -182,7 +182,6 @@ export default function SolverDashboard() {
                   <p className="text-[10px] text-gray-400 mt-1 truncate">Pelapor: {ticket.pengirimName}</p>
 
                   <div className="mt-3 pt-2.5 border-t border-gray-100 flex items-center justify-between text-[9px] text-gray-400 font-mono">
-                    <span>{ticket.jenis}</span>
                     <span>{ticket.tanggalUpdate}</span>
                   </div>
                 </button>
@@ -202,9 +201,6 @@ export default function SolverDashboard() {
                 <div className="flex items-center gap-2">
                   <span className="font-mono font-black text-sm md:text-base text-gray-900">
                     {selectedTicket.id}
-                  </span>
-                  <span className="text-[10px] bg-white border border-gray-200 font-bold px-2 py-0.5 rounded-md text-gray-500 uppercase font-mono">
-                    {selectedTicket.jenis}
                   </span>
                 </div>
                 <p className="text-[10px] text-gray-400 mt-0.5">Layanan: {selectedTicket.layananSub} | Pelapor: {selectedTicket.pengirimName}</p>
